@@ -1,0 +1,36 @@
+{
+  "name": "auth-service",
+  "$schema": "../../../node_modules/nx/schemas/project-schema.json",
+  "sourceRoot": "apps/services/auth-service/src",
+  "projectType": "application",
+  "targets": {
+    "serve": {
+      "executor": "nx:run-commands",
+      "options": { "command": "yarn workspace @sandbox/auth-service start:dev" }
+    },
+    "start": {
+      "executor": "nx:run-commands",
+      "options": { "command": "yarn workspace @sandbox/auth-service start" }
+    },
+    "test": {
+      "executor": "nx:run-commands",
+      "options": { "command": "yarn workspace @sandbox/auth-service test" }
+    },
+    "migration:run": {
+      "executor": "nx:run-commands",
+      "options": { "command": "yarn workspace @sandbox/auth-service migration:run" }
+    },
+    "migration:generate": {
+      "executor": "nx:run-commands",
+      "options": { "command": "yarn workspace @sandbox/auth-service migration:generate" }
+    },
+    "migration:revert": {
+      "executor": "nx:run-commands",
+      "options": { "command": "yarn workspace @sandbox/auth-service migration:revert" }
+    },
+    "seed": {
+      "executor": "nx:run-commands",
+      "options": { "command": "yarn workspace @sandbox/auth-service seed" }
+    }
+  }
+}

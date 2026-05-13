@@ -1,0 +1,50 @@
+{
+  "name": "pricing-service",
+  "$schema": "../../../node_modules/nx/schemas/project-schema.json",
+  "sourceRoot": "apps/services/pricing-service/src",
+  "projectType": "application",
+  "targets": {
+    "serve": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "yarn workspace @sandbox/pricing-service start:dev"
+      }
+    },
+    "start": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "yarn workspace @sandbox/pricing-service start"
+      }
+    },
+    "test": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "yarn workspace @sandbox/pricing-service test"
+      }
+    },
+    "migration:run": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "yarn workspace @sandbox/pricing-service migration:run"
+      }
+    },
+    "migration:generate": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "yarn workspace @sandbox/pricing-service migration:generate"
+      }
+    },
+    "migration:revert": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "yarn workspace @sandbox/pricing-service migration:revert"
+      }
+    },
+    "seed": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "yarn workspace @sandbox/pricing-service seed"
+      }
+    }
+  }
+}

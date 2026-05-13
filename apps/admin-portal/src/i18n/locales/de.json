@@ -1,0 +1,54 @@
+{
+  "app": {
+    "title": "Admin-Portal",
+    "loading": "Lädt …",
+    "errors": {
+      "generic": "Etwas ist schiefgelaufen. Versuche es erneut.",
+      "network": "Verbindung zum Server fehlgeschlagen.",
+      "forbidden": "Du hast keinen Zugriff."
+    }
+  },
+  "nav": {
+    "trades": "Trade-Konfiguration",
+    "craftsmen": "Craftsmen",
+    "logout": "Abmelden"
+  },
+  "login": {
+    "heading": "Admin-Anmeldung",
+    "subheading": "Diese Oberfläche ist nur für Administratoren.",
+    "email": "E-Mail",
+    "password": "Passwort",
+    "submit": "Anmelden",
+    "submitting": "Wird angemeldet …",
+    "errors": {
+      "required": "Pflichtfeld",
+      "email": "Bitte gib eine gültige E-Mail-Adresse ein.",
+      "invalidCredentials": "Anmeldedaten sind falsch.",
+      "notAdmin": "Dieses Konto hat keine Admin-Rechte."
+    },
+    "hint": "Verwende admin@example.com / admin123."
+  },
+  "trades": {
+    "heading": "Trade-Konfiguration",
+    "subheading": "Übersicht aller Trade-Kategorien und ihrer Preis-Schemas.",
+    "columns": {
+      "code": "Code",
+      "displayName": "Bezeichnung",
+      "isActive": "Aktiv",
+      "fieldCount": "Felder im Schema"
+    },
+    "emptyState": "Keine Trade-Kategorien gefunden.",
+    "loadFailed": "Trades konnten nicht geladen werden.",
+    "viewSchema": "Schema ansehen",
+    "schemaPlaceholder": "Für diese Trade-Kategorie ist noch kein Preis-Schema konfiguriert.",
+    "schemaPropertyNames": {
+      "name": "Name",
+      "type": "Typ",
+      "required": "Pflichtfeld",
+      "min": "Minimum",
+      "max": "Maximum",
+      "values": "Erlaubte Werte",
+      "dependsOn": "Abhängig von"
+    }
+  }
+}

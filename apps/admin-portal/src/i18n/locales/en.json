@@ -1,0 +1,54 @@
+{
+  "app": {
+    "title": "Admin Portal",
+    "loading": "Loading…",
+    "errors": {
+      "generic": "Something went wrong. Try again.",
+      "network": "Could not reach the server.",
+      "forbidden": "You do not have access."
+    }
+  },
+  "nav": {
+    "trades": "Trade configuration",
+    "craftsmen": "Craftsmen",
+    "logout": "Log out"
+  },
+  "login": {
+    "heading": "Admin sign in",
+    "subheading": "This portal is for administrators only.",
+    "email": "Email",
+    "password": "Password",
+    "submit": "Sign in",
+    "submitting": "Signing in…",
+    "errors": {
+      "required": "Required",
+      "email": "Enter a valid email address.",
+      "invalidCredentials": "Invalid credentials.",
+      "notAdmin": "This account does not have admin rights."
+    },
+    "hint": "Use admin@example.com / admin123."
+  },
+  "trades": {
+    "heading": "Trade configuration",
+    "subheading": "All trade categories and their pricing schemas.",
+    "columns": {
+      "code": "Code",
+      "displayName": "Name",
+      "isActive": "Active",
+      "fieldCount": "Schema fields"
+    },
+    "emptyState": "No trade categories found.",
+    "loadFailed": "Could not load trades.",
+    "viewSchema": "View schema",
+    "schemaPlaceholder": "No pricing schema has been configured for this trade yet.",
+    "schemaPropertyNames": {
+      "name": "Name",
+      "type": "Type",
+      "required": "Required",
+      "min": "Minimum",
+      "max": "Maximum",
+      "values": "Allowed values",
+      "dependsOn": "Depends on"
+    }
+  }
+}

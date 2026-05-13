@@ -1,0 +1,20 @@
+{
+  "name": "admin-portal",
+  "$schema": "../../node_modules/nx/schemas/project-schema.json",
+  "sourceRoot": "apps/admin-portal/src",
+  "projectType": "application",
+  "targets": {
+    "serve": {
+      "executor": "nx:run-commands",
+      "options": { "command": "yarn workspace @sandbox/admin-portal dev" }
+    },
+    "build": {
+      "executor": "nx:run-commands",
+      "options": { "command": "yarn workspace @sandbox/admin-portal build" }
+    },
+    "test": {
+      "executor": "nx:run-commands",
+      "options": { "command": "yarn workspace @sandbox/admin-portal test" }
+    }
+  }
+}

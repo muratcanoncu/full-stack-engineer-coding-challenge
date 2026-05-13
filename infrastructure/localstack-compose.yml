@@ -1,0 +1,35 @@
+# Opt-in stack for verifying the Terraform deliverable (challenge §3.4.2)
+# locally. `terraform plan` is all you need — no real AWS account required,
+# no apply, no Pro license. LocalStack Community is enough.
+#
+# Bring up:
+#   docker compose -f infrastructure/localstack-compose.yml up -d
+#
+# Tear down:
+#   docker compose -f infrastructure/localstack-compose.yml down -v
+#
+# Everything LocalStack exposes is on `http://localhost:4566`. Point your
+# Terraform `aws` provider at that endpoint — see
+# `infrastructure/localstack-provider.tf.example` for a copy-paste snippet.
+
+services:
+  localstack:
+    image: localstack/localstack:3.7
+    container_name: localstack
+    ports:
+      - "4566:4566"
+    environment:
+      SERVICES: "ec2,ecs,ecr,elbv2,iam,rds,s3,secretsmanager,logs,sts,cloudwatch,route53"
+      DEBUG: "0"
+      DEFAULT_REGION: "eu-central-1"
+    volumes:
+      - localstack-data:/var/lib/localstack
+    healthcheck:
+      test: ["CMD", "curl", "-fsS", "http://localhost:4566/_localstack/health"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+      start_period: 30s
+
+volumes:
+  localstack-data:

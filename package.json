@@ -1,0 +1,35 @@
+{
+  "name": "trade-pricing-challenge",
+  "version": "0.1.0",
+  "private": true,
+  "license": "UNLICENSED",
+  "workspaces": [
+    "apps/*",
+    "apps/services/*",
+    "libs/shared/*"
+  ],
+  "scripts": {
+    "postinstall": "node -e \"console.log('Run: yarn nx run pricing-service:migration:run')\""
+  },
+  "devDependencies": {
+    "@eslint/js": "^9.18.0",
+    "@nx/js": "^17.3.0",
+    "@nx/workspace": "^17.3.0",
+    "@types/jest": "^29.5.11",
+    "@types/node": "^20.10.6",
+    "eslint": "^9.18.0",
+    "eslint-config-prettier": "^9.1.0",
+    "jest": "^29.7.0",
+    "nx": "^17.3.0",
+    "prettier": "^3.1.1",
+    "ts-jest": "^29.1.1",
+    "tsx": "^4.7.0",
+    "typescript": "^5.3.3",
+    "typescript-eslint": "^8.20.0"
+  },
+  "resolutions": {
+    "glob": "^13.0.0",
+    "rimraf": "^6.0.1",
+    "uuid": "^11.0.5"
+  }
+}

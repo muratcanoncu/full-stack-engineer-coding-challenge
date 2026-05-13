@@ -1,0 +1,34 @@
+# dependencies
+node_modules/
+
+# builds
+dist/
+tmp/
+.next/
+build/
+coverage/
+
+# nx
+.nx/cache
+.nx/workspace-data
+
+# env
+.env
+.env.local
+.env.*.local
+
+# editors
+.idea/
+.vscode/*
+!.vscode/settings.json
+!.vscode/launch.json
+.DS_Store
+*.swp
+
+# logs
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# database volumes
+postgres-data/

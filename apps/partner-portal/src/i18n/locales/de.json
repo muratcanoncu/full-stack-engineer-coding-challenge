@@ -1,0 +1,62 @@
+{
+  "app": {
+    "title": "Partner-Portal",
+    "loading": "Lädt …",
+    "errors": {
+      "generic": "Etwas ist schiefgelaufen. Versuche es erneut.",
+      "network": "Verbindung zum Server fehlgeschlagen."
+    }
+  },
+  "nav": {
+    "profile": "Mein Profil",
+    "pricing": "Mein Preiskatalog",
+    "logout": "Abmelden"
+  },
+  "login": {
+    "heading": "Anmelden",
+    "subheading": "Melde Dich mit Deinen Zugangsdaten an.",
+    "email": "E-Mail",
+    "password": "Passwort",
+    "submit": "Anmelden",
+    "submitting": "Wird angemeldet …",
+    "errors": {
+      "required": "Pflichtfeld",
+      "email": "Bitte gib eine gültige E-Mail-Adresse ein.",
+      "invalidCredentials": "Anmeldedaten sind falsch."
+    },
+    "hint": "Verwende admin@example.com / admin123 oder partner@example.com / partner123."
+  },
+  "profile": {
+    "heading": "Mein Profil",
+    "subheading": "Verwalte Deine Stammdaten und Trade-Kategorien.",
+    "sections": {
+      "company": "Unternehmen",
+      "address": "Anschrift",
+      "trades": "Trade-Kategorien"
+    },
+    "fields": {
+      "companyName": "Firmenname",
+      "email": "E-Mail",
+      "phone": "Telefon",
+      "vatNumber": "USt-IdNr.",
+      "addressLine1": "Adresszeile 1",
+      "addressLine2": "Adresszeile 2",
+      "postalCode": "PLZ",
+      "city": "Stadt",
+      "country": "Land"
+    },
+    "save": "Speichern",
+    "saving": "Wird gespeichert …",
+    "empty": "Es ist kein Craftsman mit diesem Konto verknüpft.",
+    "messages": {
+      "saved": "Profil gespeichert.",
+      "saveFailed": "Speichern fehlgeschlagen.",
+      "loadFailed": "Profil konnte nicht geladen werden."
+    }
+  },
+  "validation": {
+    "required": "Pflichtfeld",
+    "email": "Ungültige E-Mail",
+    "maxLength": "Maximal {{n}} Zeichen"
+  }
+}

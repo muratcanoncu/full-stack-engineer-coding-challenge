@@ -1,0 +1,20 @@
+{
+  "name": "partner-portal",
+  "$schema": "../../node_modules/nx/schemas/project-schema.json",
+  "sourceRoot": "apps/partner-portal/src",
+  "projectType": "application",
+  "targets": {
+    "serve": {
+      "executor": "nx:run-commands",
+      "options": { "command": "yarn workspace @sandbox/partner-portal dev" }
+    },
+    "build": {
+      "executor": "nx:run-commands",
+      "options": { "command": "yarn workspace @sandbox/partner-portal build" }
+    },
+    "test": {
+      "executor": "nx:run-commands",
+      "options": { "command": "yarn workspace @sandbox/partner-portal test" }
+    }
+  }
+}

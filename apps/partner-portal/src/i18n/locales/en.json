@@ -1,0 +1,62 @@
+{
+  "app": {
+    "title": "Partner Portal",
+    "loading": "Loading…",
+    "errors": {
+      "generic": "Something went wrong. Try again.",
+      "network": "Could not reach the server."
+    }
+  },
+  "nav": {
+    "profile": "My Profile",
+    "pricing": "My Pricing Catalog",
+    "logout": "Log out"
+  },
+  "login": {
+    "heading": "Sign in",
+    "subheading": "Sign in with your credentials.",
+    "email": "Email",
+    "password": "Password",
+    "submit": "Sign in",
+    "submitting": "Signing in…",
+    "errors": {
+      "required": "Required",
+      "email": "Enter a valid email address.",
+      "invalidCredentials": "Invalid credentials."
+    },
+    "hint": "Use admin@example.com / admin123 or partner@example.com / partner123."
+  },
+  "profile": {
+    "heading": "My Profile",
+    "subheading": "Manage your business information and trade categories.",
+    "sections": {
+      "company": "Company",
+      "address": "Address",
+      "trades": "Trade categories"
+    },
+    "fields": {
+      "companyName": "Company name",
+      "email": "Email",
+      "phone": "Phone",
+      "vatNumber": "VAT number",
+      "addressLine1": "Address line 1",
+      "addressLine2": "Address line 2",
+      "postalCode": "Postal code",
+      "city": "City",
+      "country": "Country"
+    },
+    "save": "Save",
+    "saving": "Saving…",
+    "empty": "No craftsman is linked to this account.",
+    "messages": {
+      "saved": "Profile saved.",
+      "saveFailed": "Could not save profile.",
+      "loadFailed": "Could not load profile."
+    }
+  },
+  "validation": {
+    "required": "Required",
+    "email": "Invalid email",
+    "maxLength": "Maximum {{n}} characters"
+  }
+}

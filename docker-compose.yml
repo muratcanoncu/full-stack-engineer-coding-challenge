@@ -1,0 +1,127 @@
+services:
+  postgres:
+    image: postgres:16-alpine
+    container_name: pricing-postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: pricing
+    ports:
+      - "${POSTGRES_PORT:-5432}:5432"
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+      - ./infrastructure/postgres-init.sql:/docker-entrypoint-initdb.d/01-init.sql:ro
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres -d pricing"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  auth-service:
+    build:
+      context: .
+      dockerfile: apps/services/auth-service/Dockerfile
+    container_name: auth-service
+    depends_on:
+      postgres:
+        condition: service_healthy
+    environment:
+      NODE_ENV: development
+      PORT: 3001
+      DATABASE_HOST: postgres
+      DATABASE_PORT: 5432
+      DATABASE_USER: postgres
+      DATABASE_PASSWORD: postgres
+      DATABASE_NAME: pricing
+      DATABASE_SCHEMA: auth_service
+      JWT_SECRET: "dev-only-secret-do-not-use-in-prod"
+      JWT_EXPIRES_IN: "7d"
+      # Forces polling-based file watching. Native inotify events do not
+      # always cross the podman/Docker-Desktop VM boundary on macOS/Windows.
+      CHOKIDAR_USEPOLLING: "1"
+    ports:
+      - "3001:3001"
+    volumes:
+      - ./apps/services/auth-service/src:/app/apps/services/auth-service/src
+      - ./libs:/app/libs
+    healthcheck:
+      test: ["CMD-SHELL", "wget -qO- http://localhost:3001/api/v1/health > /dev/null || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 12
+      start_period: 30s
+
+  pricing-service:
+    build:
+      context: .
+      dockerfile: apps/services/pricing-service/Dockerfile
+    container_name: pricing-service
+    depends_on:
+      postgres:
+        condition: service_healthy
+    environment:
+      NODE_ENV: development
+      PORT: 3000
+      DATABASE_HOST: postgres
+      DATABASE_PORT: 5432
+      DATABASE_USER: postgres
+      DATABASE_PASSWORD: postgres
+      DATABASE_NAME: pricing
+      DATABASE_SCHEMA: pricing_service
+      # Must match auth-service. JWTs are validated locally against this secret.
+      JWT_SECRET: "dev-only-secret-do-not-use-in-prod"
+      JWT_EXPIRES_IN: "7d"
+      # Forces polling-based file watching. Native inotify events do not
+      # always cross the podman/Docker-Desktop VM boundary on macOS/Windows.
+      CHOKIDAR_USEPOLLING: "1"
+    ports:
+      - "3000:3000"
+    volumes:
+      - ./apps/services/pricing-service/src:/app/apps/services/pricing-service/src
+      - ./libs:/app/libs
+    healthcheck:
+      test: ["CMD-SHELL", "wget -qO- http://localhost:3000/api/v1/health > /dev/null || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 12
+      start_period: 30s
+
+  partner-portal:
+    build:
+      context: .
+      dockerfile: apps/partner-portal/Dockerfile
+    container_name: partner-portal
+    depends_on:
+      auth-service:
+        condition: service_healthy
+      pricing-service:
+        condition: service_healthy
+    environment:
+      VITE_AUTH_API_BASE_URL: "http://localhost:3001/api/v1"
+      VITE_API_BASE_URL: "http://localhost:3000/api/v1"
+    ports:
+      - "4200:4200"
+    volumes:
+      - ./apps/partner-portal/src:/app/apps/partner-portal/src
+
+  admin-portal:
+    build:
+      context: .
+      dockerfile: apps/admin-portal/Dockerfile
+    container_name: admin-portal
+    depends_on:
+      auth-service:
+        condition: service_healthy
+      pricing-service:
+        condition: service_healthy
+    environment:
+      VITE_AUTH_API_BASE_URL: "http://localhost:3001/api/v1"
+      VITE_API_BASE_URL: "http://localhost:3000/api/v1"
+    ports:
+      - "4201:4201"
+    volumes:
+      - ./apps/admin-portal/src:/app/apps/admin-portal/src
+
+volumes:
+  postgres-data:
