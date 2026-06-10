@@ -15,8 +15,7 @@ import { bigIntTransformer, numericTransformer } from './column-transformers';
 
 /**
  * A single priced position within a catalog version. The trade-specific
- * attribute object lives in `attributes` (jsonb) and is validated against the
- * trade's `pricingSchema` on every draft write.
+ * attribute object lives in `attributes` (jsonb).
  */
 @Entity({ schema: 'pricing_service', name: 'catalog_positions' })
 @Unique('uniq_position_version_key', ['versionId', 'key'])
