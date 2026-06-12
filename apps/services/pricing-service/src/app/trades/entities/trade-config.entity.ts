@@ -6,6 +6,7 @@ import {
   PrimaryGeneratedColumn,
   UpdateDateColumn,
 } from 'typeorm';
+import { PricingSchema } from '@sandbox/types';
 
 /**
  * Configuration per trade category. Holds the human-readable label plus any
@@ -33,6 +34,14 @@ export class TradeConfig {
    */
   @Column({ type: 'jsonb', default: {} })
   metadata: Record<string, unknown>;
+
+  /**
+   * Per-trade attribute schema used to validate position `attributes` and to
+   * drive the dynamic partner form / admin schema editor. Null until an admin
+   * configures it.
+   */
+  @Column({ name: 'pricing_schema', type: 'jsonb', nullable: true })
+  pricingSchema: PricingSchema | null;
 
   @CreateDateColumn({ name: 'created_at' })
   createdAt: Date;

@@ -32,3 +32,6 @@ yarn-error.log*
 
 # database volumes
 postgres-data/
+
+# private working notes (not part of the submission)
+notes/

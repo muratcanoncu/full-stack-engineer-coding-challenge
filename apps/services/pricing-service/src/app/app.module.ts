@@ -6,7 +6,6 @@ import { dataSourceOptions } from '../data-source';
 import { AuthModule } from './auth/auth.module';
 import { CraftsmenModule } from './craftsmen/craftsmen.module';
 import { TradesModule } from './trades/trades.module';
-import { PricingCatalogsModule } from './pricing-catalogs/pricing-catalogs.module';
 import { HealthModule } from './health/health.module';
 
 @Module({
@@ -19,7 +18,6 @@ import { HealthModule } from './health/health.module';
     AuthModule,
     CraftsmenModule,
     TradesModule,
-    PricingCatalogsModule,
     HealthModule,
   ],
 })
