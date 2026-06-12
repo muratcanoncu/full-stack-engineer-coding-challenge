@@ -22,6 +22,7 @@ describe('PricingCatalogsController', () => {
       findOne: jest.fn().mockResolvedValue({ id: 'v1' }),
       create: jest.fn().mockResolvedValue({ id: 'v1' }),
       update: jest.fn().mockResolvedValue({ id: 'v1' }),
+      publish: jest.fn().mockResolvedValue({ id: 'v1' }),
     };
 
     const moduleRef = await Test.createTestingModule({
@@ -55,5 +56,10 @@ describe('PricingCatalogsController', () => {
   it('delegates update to the service', async () => {
     await controller.update('v1', { effectiveFrom: '2026-07-01' }, user);
     expect(service.update).toHaveBeenCalledWith('v1', { effectiveFrom: '2026-07-01' }, user);
+  });
+
+  it('delegates publish to the service', async () => {
+    await controller.publish('v1', user);
+    expect(service.publish).toHaveBeenCalledWith('v1', user);
   });
 });

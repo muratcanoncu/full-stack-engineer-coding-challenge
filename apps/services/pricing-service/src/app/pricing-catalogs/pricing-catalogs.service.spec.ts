@@ -1,7 +1,12 @@
-import { BadRequestException, ForbiddenException, NotFoundException } from '@nestjs/common';
+import {
+  BadRequestException,
+  ConflictException,
+  ForbiddenException,
+  NotFoundException,
+} from '@nestjs/common';
 import { Test } from '@nestjs/testing';
 import { getRepositoryToken } from '@nestjs/typeorm';
-import { DataSource, ObjectLiteral, Repository } from 'typeorm';
+import { DataSource, ObjectLiteral, QueryFailedError, Repository } from 'typeorm';
 import { JwtPayload, UserRole } from '@sandbox/types';
 
 import { Craftsman } from '../craftsmen/entities/craftsman.entity';
@@ -45,6 +50,14 @@ function buildVersion(overrides: Partial<CatalogVersion> = {}): CatalogVersion {
     discounts: [],
     ...overrides,
   } as CatalogVersion;
+}
+
+function uniqueViolationError(): QueryFailedError {
+  const driverError = new Error('duplicate key value violates unique constraint') as Error & {
+    code: string;
+  };
+  driverError.code = '23505';
+  return new QueryFailedError('q', [], driverError);
 }
 
 function validCreateDto(overrides: Partial<CreateCatalogVersionDto> = {}): CreateCatalogVersionDto {
@@ -242,6 +255,63 @@ describe('PricingCatalogsService', () => {
       expect(txPositionRepo.save).toHaveBeenCalledWith([
         expect.objectContaining({ key: 'p2', versionId: 'v1' }),
       ]);
+    });
+  });
+
+  describe('publish', () => {
+    it('transitions a DRAFT to PUBLISHED and stamps the publisher', async () => {
+      await service.publish('v1', adminUser);
+      expect(txVersionRepo.save).toHaveBeenCalledWith(
+        expect.objectContaining({
+          status: 'PUBLISHED',
+          publishedByUserId: 'admin-id',
+          publishedAt: expect.any(Date),
+        }),
+      );
+    });
+
+    it('rejects publishing a version that is already PUBLISHED (publish twice)', async () => {
+      versionsRepo.findOne!.mockResolvedValue(buildVersion({ status: 'PUBLISHED' }));
+      await expect(service.publish('v1', adminUser)).rejects.toBeInstanceOf(BadRequestException);
+      expect(txVersionRepo.save).not.toHaveBeenCalled();
+    });
+
+    it('throws NotFoundException when the version is missing', async () => {
+      versionsRepo.findOne!.mockResolvedValue(null);
+      await expect(service.publish('v1', adminUser)).rejects.toBeInstanceOf(NotFoundException);
+    });
+
+    it('throws ForbiddenException when a CRAFTSMAN publishes another craftsman catalog', async () => {
+      await expect(service.publish('v1', otherCraftsmanUser)).rejects.toBeInstanceOf(
+        ForbiddenException,
+      );
+    });
+
+    it('maps a unique-violation to ConflictException', async () => {
+      txVersionRepo.save!.mockRejectedValue(uniqueViolationError());
+      await expect(service.publish('v1', adminUser)).rejects.toBeInstanceOf(ConflictException);
+    });
+
+    it('lets exactly one of two concurrent publishes win', async () => {
+      // Each request loads its own row, both DRAFT at read time.
+      versionsRepo.findOne!.mockImplementation(() => Promise.resolve(buildVersion()));
+      // The DB index admits the first write and rejects the second with 23505.
+      txVersionRepo.save!
+        .mockResolvedValueOnce(undefined)
+        .mockRejectedValue(uniqueViolationError());
+
+      const results = await Promise.allSettled([
+        service.publish('v1', adminUser),
+        service.publish('v1', adminUser),
+      ]);
+
+      const fulfilled = results.filter((r) => r.status === 'fulfilled');
+      const rejected = results.filter(
+        (r): r is PromiseRejectedResult => r.status === 'rejected',
+      );
+      expect(fulfilled).toHaveLength(1);
+      expect(rejected).toHaveLength(1);
+      expect(rejected[0].reason).toBeInstanceOf(ConflictException);
     });
   });
 });

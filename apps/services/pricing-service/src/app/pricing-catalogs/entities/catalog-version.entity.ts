@@ -23,6 +23,13 @@ export type CatalogVersionStatus = 'DRAFT' | 'PUBLISHED';
  */
 @Entity({ schema: 'pricing_service', name: 'catalog_versions' })
 @Index(['craftsmanId', 'trade'])
+// At most one PUBLISHED version per (craftsman, trade) may share an effectiveFrom.
+// This makes overlapping active intervals impossible and serializes concurrent
+// publishes at the database level (the loser hits this unique violation).
+@Index('uniq_published_version_active', ['craftsmanId', 'trade', 'effectiveFrom'], {
+  unique: true,
+  where: "status = 'PUBLISHED'",
+})
 export class CatalogVersion {
   @PrimaryGeneratedColumn('uuid')
   id: string;

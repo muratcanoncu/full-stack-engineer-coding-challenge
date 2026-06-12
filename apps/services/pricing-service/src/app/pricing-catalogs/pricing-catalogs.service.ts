@@ -1,12 +1,13 @@
 import {
   BadRequestException,
+  ConflictException,
   ForbiddenException,
   Injectable,
   Logger,
   NotFoundException,
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { DataSource, EntityManager, Repository } from 'typeorm';
+import { DataSource, EntityManager, QueryFailedError, Repository } from 'typeorm';
 import { JwtPayload, UserRole } from '@sandbox/types';
 
 import { Craftsman } from '../craftsmen/entities/craftsman.entity';
@@ -145,6 +146,43 @@ export class PricingCatalogsService {
     });
 
     return CatalogVersionResponseDto.fromVersion(saved);
+  }
+
+  async publish(versionId: string, user: JwtPayload): Promise<CatalogVersionResponseDto> {
+    const version = await this.loadVersionOrThrow(versionId);
+    this.assertCanAccess(version.craftsmanId, user);
+    if (version.status === 'PUBLISHED') {
+      throw new BadRequestException('Version is already published');
+    }
+
+    try {
+      await this.dataSource.transaction(async (tx) => {
+        version.status = 'PUBLISHED';
+        version.publishedByUserId = user.sub;
+        version.publishedAt = new Date();
+        await tx.getRepository(CatalogVersion).save(version);
+      });
+    } catch (err) {
+      // The partial unique index rejects a second active published version for
+      // the same craftsman+trade+effectiveFrom (e.g. a concurrent publish race).
+      if (this.isUniqueViolation(err)) {
+        throw new ConflictException(
+          `Another published version is already active for ${version.trade} effective ${version.effectiveFrom}`,
+        );
+      }
+      throw err;
+    }
+
+    this.logger.log(`Published version ${versionId} by ${user.sub}`);
+    const published = await this.loadVersionOrThrow(versionId);
+    return CatalogVersionResponseDto.fromVersion(published);
+  }
+
+  private isUniqueViolation(err: unknown): boolean {
+    return (
+      err instanceof QueryFailedError &&
+      (err.driverError as { code?: string } | undefined)?.code === '23505'
+    );
   }
 
   // ---------------------------------------------------------------------

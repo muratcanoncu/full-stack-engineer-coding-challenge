@@ -1,4 +1,16 @@
-import { Body, Controller, Get, Param, ParseUUIDPipe, Patch, Post, Query, UseGuards } from '@nestjs/common';
+import {
+  Body,
+  Controller,
+  Get,
+  HttpCode,
+  HttpStatus,
+  Param,
+  ParseUUIDPipe,
+  Patch,
+  Post,
+  Query,
+  UseGuards,
+} from '@nestjs/common';
 import { ApiBearerAuth, ApiOperation, ApiResponse, ApiTags } from '@nestjs/swagger';
 import { CurrentUser, JwtAuthGuard, Roles, RolesGuard } from '@sandbox/auth';
 import { JwtPayload, UserRole } from '@sandbox/types';
@@ -68,5 +80,21 @@ export class PricingCatalogsController {
     @CurrentUser() user: JwtPayload,
   ): Promise<CatalogVersionResponseDto> {
     return this.service.update(versionId, dto, user);
+  }
+
+  @Post(':versionId/publish')
+  @Roles(UserRole.ADMIN, UserRole.CRAFTSMAN)
+  @HttpCode(HttpStatus.OK)
+  @ApiOperation({ summary: 'Publish a DRAFT version (immutable afterwards)' })
+  @ApiResponse({ status: 200, type: CatalogVersionResponseDto })
+  @ApiResponse({ status: 400, description: 'Version is already published' })
+  @ApiResponse({ status: 403, description: 'Caller may not publish this catalog' })
+  @ApiResponse({ status: 404, description: 'Version not found' })
+  @ApiResponse({ status: 409, description: 'Another published version is already active for this trade + effective date' })
+  publish(
+    @Param('versionId', ParseUUIDPipe) versionId: string,
+    @CurrentUser() user: JwtPayload,
+  ): Promise<CatalogVersionResponseDto> {
+    return this.service.publish(versionId, user);
   }
 }
