@@ -23,6 +23,7 @@ describe('PricingCatalogsController', () => {
       create: jest.fn().mockResolvedValue({ id: 'v1' }),
       update: jest.fn().mockResolvedValue({ id: 'v1' }),
       publish: jest.fn().mockResolvedValue({ id: 'v1' }),
+      quoteByVersion: jest.fn().mockResolvedValue({ totals: {} }),
     };
 
     const moduleRef = await Test.createTestingModule({
@@ -61,5 +62,11 @@ describe('PricingCatalogsController', () => {
   it('delegates publish to the service', async () => {
     await controller.publish('v1', user);
     expect(service.publish).toHaveBeenCalledWith('v1', user);
+  });
+
+  it('delegates quoteByVersion to the service', async () => {
+    const dto = { lines: [{ positionKey: 'p1', quantity: 2 }] };
+    await controller.quoteByVersion('v1', dto, user);
+    expect(service.quoteByVersion).toHaveBeenCalledWith('v1', dto, user);
   });
 });

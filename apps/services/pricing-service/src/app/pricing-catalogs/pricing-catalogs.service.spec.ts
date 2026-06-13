@@ -16,6 +16,20 @@ import { CatalogDiscount } from './entities/catalog-discount.entity';
 import { PricingCatalogsService } from './pricing-catalogs.service';
 import { CreateCatalogVersionDto } from './dto/create-catalog-version.dto';
 
+function buildVersionWithPosition(overrides: Partial<CatalogVersion> = {}): CatalogVersion {
+  const position = {
+    key: 'p1',
+    label: 'Boiler',
+    unit: 'piece',
+    netPriceCents: 100000,
+    vatRate: 0.19,
+    minQuantity: null,
+    maxQuantity: null,
+    surcharges: [],
+  } as unknown as CatalogPosition;
+  return { id: 'v1', craftsmanId: 'craftsman-1', trade: 'HVAC', status: 'PUBLISHED', effectiveFrom: '2026-06-01', publishedByUserId: 'u', publishedAt: new Date('2026-06-01T00:00:00.000Z'), createdAt: new Date('2026-06-01T00:00:00.000Z'), updatedAt: new Date('2026-06-01T00:00:00.000Z'), positions: [position], discounts: [], ...overrides } as CatalogVersion;
+}
+
 type Repo<T extends ObjectLiteral> = Partial<Record<keyof Repository<T>, jest.Mock>>;
 
 const adminUser: JwtPayload = {
@@ -93,7 +107,7 @@ describe('PricingCatalogsService', () => {
       findOne: jest.fn().mockResolvedValue(buildVersion()),
     };
     craftsmenRepo = {
-      findOne: jest.fn().mockResolvedValue({ id: 'craftsman-1' } as Craftsman),
+      findOne: jest.fn().mockResolvedValue({ id: 'craftsman-1', isActive: true } as Craftsman),
     };
     txVersionRepo = {
       create: jest.fn().mockImplementation((x: CatalogVersion) => x),
@@ -312,6 +326,82 @@ describe('PricingCatalogsService', () => {
       expect(fulfilled).toHaveLength(1);
       expect(rejected).toHaveLength(1);
       expect(rejected[0].reason).toBeInstanceOf(ConflictException);
+    });
+  });
+
+  describe('quoteByVersion', () => {
+    beforeEach(() => {
+      versionsRepo.findOne!.mockResolvedValue(buildVersionWithPosition());
+    });
+
+    it('prices the requested lines against the version', async () => {
+      const result = await service.quoteByVersion(
+        'v1',
+        { lines: [{ positionKey: 'p1', quantity: 2 }] },
+        adminUser,
+      );
+      expect(result.totals.netCents).toBe(200000);
+      expect(result.totals.vatCents).toBe(38000);
+      expect(result.totals.grossCents).toBe(238000);
+    });
+
+    it('throws NotFoundException when the version is missing', async () => {
+      versionsRepo.findOne!.mockResolvedValue(null);
+      await expect(
+        service.quoteByVersion('v1', { lines: [] }, adminUser),
+      ).rejects.toBeInstanceOf(NotFoundException);
+    });
+
+    it('throws ForbiddenException for another craftsman catalog', async () => {
+      await expect(
+        service.quoteByVersion('v1', { lines: [] }, otherCraftsmanUser),
+      ).rejects.toBeInstanceOf(ForbiddenException);
+    });
+
+    it('returns 400 when the craftsman is disabled', async () => {
+      craftsmenRepo.findOne!.mockResolvedValue({ id: 'craftsman-1', isActive: false } as Craftsman);
+      await expect(
+        service.quoteByVersion('v1', { lines: [{ positionKey: 'p1', quantity: 1 }] }, adminUser),
+      ).rejects.toBeInstanceOf(BadRequestException);
+    });
+
+    it('maps a calculator error (unknown position) to 400', async () => {
+      await expect(
+        service.quoteByVersion('v1', { lines: [{ positionKey: 'nope', quantity: 1 }] }, adminUser),
+      ).rejects.toBeInstanceOf(BadRequestException);
+    });
+  });
+
+  describe('quoteActiveByCraftsmanTrade', () => {
+    it('quotes against the resolved active published version', async () => {
+      versionsRepo.findOne!.mockResolvedValue(buildVersionWithPosition());
+      const result = await service.quoteActiveByCraftsmanTrade(
+        'craftsman-1',
+        'HVAC',
+        { lines: [{ positionKey: 'p1', quantity: 1 }] },
+        adminUser,
+      );
+      expect(result.totals.grossCents).toBe(119000);
+    });
+
+    it('throws NotFoundException when no active version exists', async () => {
+      versionsRepo.findOne!.mockResolvedValue(null);
+      await expect(
+        service.quoteActiveByCraftsmanTrade('craftsman-1', 'HVAC', { lines: [] }, adminUser),
+      ).rejects.toBeInstanceOf(NotFoundException);
+    });
+
+    it('throws ForbiddenException when a CRAFTSMAN quotes another craftsman', async () => {
+      await expect(
+        service.quoteActiveByCraftsmanTrade('craftsman-1', 'HVAC', { lines: [] }, otherCraftsmanUser),
+      ).rejects.toBeInstanceOf(ForbiddenException);
+    });
+
+    it('returns 400 when the craftsman is disabled', async () => {
+      craftsmenRepo.findOne!.mockResolvedValue({ id: 'craftsman-1', isActive: false } as Craftsman);
+      await expect(
+        service.quoteActiveByCraftsmanTrade('craftsman-1', 'HVAC', { lines: [] }, adminUser),
+      ).rejects.toBeInstanceOf(BadRequestException);
     });
   });
 });

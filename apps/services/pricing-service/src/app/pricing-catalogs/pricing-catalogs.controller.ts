@@ -19,6 +19,8 @@ import { PricingCatalogsService } from './pricing-catalogs.service';
 import { CreateCatalogVersionDto } from './dto/create-catalog-version.dto';
 import { UpdateCatalogVersionDto } from './dto/update-catalog-version.dto';
 import { QueryCatalogVersionsDto } from './dto/query-catalog-versions.dto';
+import { QuoteRequestDto } from './dto/quote-request.dto';
+import { QuoteResponseDto } from './dto/quote-response.dto';
 import {
   CatalogVersionResponseDto,
   CatalogVersionSummaryDto,
@@ -96,5 +98,21 @@ export class PricingCatalogsController {
     @CurrentUser() user: JwtPayload,
   ): Promise<CatalogVersionResponseDto> {
     return this.service.publish(versionId, user);
+  }
+
+  @Post(':versionId/quote')
+  @Roles(UserRole.ADMIN, UserRole.CRAFTSMAN)
+  @HttpCode(HttpStatus.OK)
+  @ApiOperation({ summary: 'Quote against this exact version' })
+  @ApiResponse({ status: 200, type: QuoteResponseDto })
+  @ApiResponse({ status: 400, description: 'Invalid quote (unknown position, quantity out of range, undeclared surcharge, disabled craftsman)' })
+  @ApiResponse({ status: 403, description: 'Caller may not access this catalog' })
+  @ApiResponse({ status: 404, description: 'Version not found' })
+  quoteByVersion(
+    @Param('versionId', ParseUUIDPipe) versionId: string,
+    @Body() dto: QuoteRequestDto,
+    @CurrentUser() user: JwtPayload,
+  ): Promise<QuoteResponseDto> {
+    return this.service.quoteByVersion(versionId, dto, user);
   }
 }

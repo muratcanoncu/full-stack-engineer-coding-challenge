@@ -7,8 +7,8 @@ import {
   NotFoundException,
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { DataSource, EntityManager, QueryFailedError, Repository } from 'typeorm';
-import { JwtPayload, UserRole } from '@sandbox/types';
+import { DataSource, EntityManager, LessThanOrEqual, QueryFailedError, Repository } from 'typeorm';
+import { JwtPayload, TradeCode, UserRole } from '@sandbox/types';
 
 import { Craftsman } from '../craftsmen/entities/craftsman.entity';
 import { CatalogVersion } from './entities/catalog-version.entity';
@@ -19,10 +19,13 @@ import { UpdateCatalogVersionDto } from './dto/update-catalog-version.dto';
 import { QueryCatalogVersionsDto } from './dto/query-catalog-versions.dto';
 import { CreatePositionDto } from './dto/catalog-position.dto';
 import { CreateDiscountDto } from './dto/catalog-discount.dto';
+import { QuoteRequestDto } from './dto/quote-request.dto';
+import { QuoteResponseDto } from './dto/quote-response.dto';
 import {
   CatalogVersionResponseDto,
   CatalogVersionSummaryDto,
 } from './dto/catalog-version-response.dto';
+import { CalcCatalog, QuoteCalculationError, calculateQuote } from './quote/quote-calculator';
 
 const VERSION_RELATIONS = ['positions', 'positions.surcharges', 'discounts'];
 
@@ -183,6 +186,97 @@ export class PricingCatalogsService {
       err instanceof QueryFailedError &&
       (err.driverError as { code?: string } | undefined)?.code === '23505'
     );
+  }
+
+  // ---------------------------------------------------------------------
+  // Quoting
+  // ---------------------------------------------------------------------
+
+  /** Quote against one specific version (draft or published). */
+  async quoteByVersion(
+    versionId: string,
+    dto: QuoteRequestDto,
+    user: JwtPayload,
+  ): Promise<QuoteResponseDto> {
+    const version = await this.loadVersionOrThrow(versionId);
+    this.assertCanAccess(version.craftsmanId, user);
+    await this.assertCraftsmanActive(version.craftsmanId);
+    return this.runQuote(version, dto);
+  }
+
+  /** Quote against the version currently published and active for craftsman+trade. */
+  async quoteActiveByCraftsmanTrade(
+    craftsmanId: string,
+    trade: TradeCode,
+    dto: QuoteRequestDto,
+    user: JwtPayload,
+  ): Promise<QuoteResponseDto> {
+    this.assertCanAccess(craftsmanId, user);
+    await this.assertCraftsmanActive(craftsmanId);
+
+    const today = new Date().toISOString().slice(0, 10);
+    const version = await this.versions.findOne({
+      where: { craftsmanId, trade, status: 'PUBLISHED', effectiveFrom: LessThanOrEqual(today) },
+      order: { effectiveFrom: 'DESC', createdAt: 'DESC' },
+      relations: VERSION_RELATIONS,
+    });
+    if (!version) {
+      throw new NotFoundException(`No active published version for craftsman ${craftsmanId} and trade ${trade}`);
+    }
+    return this.runQuote(version, dto);
+  }
+
+  private runQuote(version: CatalogVersion, dto: QuoteRequestDto): QuoteResponseDto {
+    try {
+      const result = calculateQuote(this.toCalcCatalog(version), dto.lines);
+      return QuoteResponseDto.from(result);
+    } catch (err) {
+      if (err instanceof QuoteCalculationError) {
+        throw new BadRequestException(err.message);
+      }
+      throw err;
+    }
+  }
+
+  private toCalcCatalog(version: CatalogVersion): CalcCatalog {
+    return {
+      positions: (version.positions ?? []).map((p) => ({
+        key: p.key,
+        label: p.label,
+        unit: p.unit,
+        netPriceCents: p.netPriceCents,
+        vatRate: p.vatRate,
+        minQuantity: p.minQuantity,
+        maxQuantity: p.maxQuantity,
+        surcharges: (p.surcharges ?? []).map((s) => ({
+          key: s.key,
+          label: s.label,
+          kind: s.kind,
+          amountCents: s.amountCents,
+          percent: s.percent,
+        })),
+      })),
+      discounts: (version.discounts ?? []).map((d) => ({
+        key: d.key,
+        label: d.label,
+        kind: d.kind,
+        amountCents: d.amountCents,
+        percent: d.percent,
+        capCents: d.capCents,
+        appliesTo: d.appliesTo,
+        sortOrder: d.sortOrder,
+      })),
+    };
+  }
+
+  private async assertCraftsmanActive(craftsmanId: string): Promise<void> {
+    const craftsman = await this.craftsmen.findOne({ where: { id: craftsmanId } });
+    if (!craftsman) {
+      throw new NotFoundException(`Craftsman ${craftsmanId} not found`);
+    }
+    if (!craftsman.isActive) {
+      throw new BadRequestException(`Craftsman ${craftsmanId} is disabled`);
+    }
   }
 
   // ---------------------------------------------------------------------

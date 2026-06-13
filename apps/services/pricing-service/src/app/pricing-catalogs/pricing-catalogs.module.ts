@@ -7,6 +7,7 @@ import { PositionSurcharge } from './entities/position-surcharge.entity';
 import { CatalogDiscount } from './entities/catalog-discount.entity';
 import { PricingCatalogsService } from './pricing-catalogs.service';
 import { PricingCatalogsController } from './pricing-catalogs.controller';
+import { CraftsmanQuoteController } from './craftsman-quote.controller';
 
 @Module({
   imports: [
@@ -19,7 +20,7 @@ import { PricingCatalogsController } from './pricing-catalogs.controller';
     ]),
   ],
   providers: [PricingCatalogsService],
-  controllers: [PricingCatalogsController],
+  controllers: [PricingCatalogsController, CraftsmanQuoteController],
   exports: [PricingCatalogsService],
 })
 export class PricingCatalogsModule {}
